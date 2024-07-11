@@ -11,8 +11,9 @@ endif
 #---------------------------------------------------------------------------------
 #  TITLE, APPID, CONTENTID, ICON0 SFOXML before ppu_rules.
 #---------------------------------------------------------------------------------
-TITLE		:=	Sprites 2D - Tiny3D
-APPID		:=	SPRITES01
+TITLE		:=	Dorian
+APPID		:=	ps3_dev_test1
+ICON0		:=  source/ICON0.PNG #maybe?
 CONTENTID	:=	UP0001-$(APPID)_00-0000000000000000
 
 include $(PSL1GHT)/ppu_rules

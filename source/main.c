@@ -28,7 +28,11 @@
 #include "ghost8_png_bin.h"
 
 
-pngData texture_ghost  [8]; // PNG container of texture
+
+//__asm volatile("trap");
+
+
+pngData texture_ghost[8]; // PNG container of texture
 u32 texture_ghost_offset[8]; // offset for texture (used to pass the texture)
 
 // draw one background color in virtual 2D coordinates
@@ -102,18 +106,18 @@ void DrawSpritesRot2D(float x, float y, float layer, float dx, float dy, u32 rgb
 
 }
 
-struct {
+struct ghost{
 
     float x, y;
     float dx, dy;
     int frame;
     u32 color;
 
-} ghost[4];
+} ghost;
 
 void drawScene()
 {
-	int i;
+	int i = 0;
 
     static int count_frames =0;
 
@@ -129,13 +133,13 @@ void drawScene()
 
     // fix Perspective Projection Matrix
 
-    DrawBackground2D(0x0040ffff) ; // light blue 
+    DrawBackground2D(0xff0000ff) ; // (r, g, b, a) 0xff0000ff ##!!! 
 
     count_frames++;
 
-    for(i = 0; i < 4; i++) {
+    //for(i = 0; i < 1; i++) { // ##!!
         
-        int cur_text = ghost[i].frame; // get current texture index for frame
+        int cur_text = ghost.frame; // get current texture index for frame
 
         // Load sprite texture
         tiny3d_SetTexture(0, texture_ghost_offset[cur_text], texture_ghost[cur_text].width,
@@ -145,44 +149,44 @@ void drawScene()
         if(!rotar) {
             
             // draw sprite
-            DrawSprites2D(ghost[i].x, ghost[i].y, (float) i, 64, 64, ghost[i].color);
+            DrawSprites2D(ghost.x, ghost.y, (float) i, 64, 64, ghost.color);
         
         }
         else {
 
             // draw with rotation
-            DrawSpritesRot2D(ghost[i].x, ghost[i].y, (float) i, 64, 64, ghost[i].color, rotZ);
+            DrawSpritesRot2D(ghost.x, ghost.y, (float) i, 64, 64, ghost.color, rotZ);
         }
 
         // update frame
         if(count_frames>8) {
             
-            ghost[i].frame = ((ghost[i].frame + 1) & 3) | (ghost[i].frame & 4); 
+            ghost.frame = ((ghost.frame + 1) & 3) | (ghost.frame & 4); 
         }
         
         // update position
-        ghost[i].x += ghost[i].dx; 
-        ghost[i].y += ghost[i].dy;
+        ghost.x += ghost.dx; 
+        ghost.y += ghost.dy;
 
         // test the limits
-        if(ghost[i].x <= 0.0f || ghost[i].x >= (847.0f - 64.0f)) {
+        if(ghost.x <= 0.0f || ghost.x >= (847.0f - 64.0f)) {
             
-            ghost[i].x  = (ghost[i].x <= 0.0f) ? 0 : (847.0f - 64.0f);
-            ghost[i].dx = -ghost[i].dx;
+            ghost.x  = (ghost.x <= 0.0f) ? 0 : (847.0f - 64.0f);
+            ghost.dx = -ghost.dx;
             
         }
 
-        if(ghost[i].y <= 0.0f || ghost[i].y >= (511.0f - 64.0f)) {
+        if(ghost.y <= 0.0f || ghost.y >= (511.0f - 64.0f)) {
             
-            ghost[i].y  = (ghost[i].y <= 0.0f) ? 0 : (511.0f - 64.0f);
-            ghost[i].dy = -ghost[i].dy;
+            ghost.y  = (ghost.y <= 0.0f) ? 0 : (511.0f - 64.0f);
+            ghost.dy = -ghost.dy;
         }
 
         // change frames to left - right
 
-        if(ghost[i].dx >= 0.0f) ghost[i].frame |= 4; else ghost[i].frame &= ~4;
+        if(ghost.dx >= 0.0f) ghost.frame |= 4; else ghost.frame &= ~4;
         
-    }
+    //}
 
     if(rotar) rotar--; else rotZ = 0.0f;
 
@@ -267,33 +271,33 @@ s32 main()
 
     /* data for the ghost */
 
-    ghost[0].x     = 0.0f;
-    ghost[0].y     = 0.0f;
-    ghost[0].dx    = 1.5f;
-    ghost[0].dy    = 1.5f;
-    ghost[0].frame = 0;
-    ghost[0].color = 0xffffff80;
+    ghost.x     = 0.0f;
+    ghost.y     = 0.0f;
+    ghost.dx    = 1.5f;
+    ghost.dy    = 1.5f;
+    ghost.frame = 0;
+    ghost.color = 0x1fffffff;
 
-    ghost[1].x     = (847.0f - 64.0f);
-    ghost[1].y     = 0.0f;
-    ghost[1].dx    = -1.5f;
-    ghost[1].dy    = 1.5f;
-    ghost[1].frame = 0;
-    ghost[1].color = 0x8f8fff80;
-
-    ghost[2].x     = 0.0f;
-    ghost[2].y     = (511.0f - 64.0f);
-    ghost[2].dx    = 1.5f;
-    ghost[2].dy    = -1.5f;
-    ghost[2].frame = 0;
-    ghost[2].color = 0xff8f8f80;
-
-    ghost[3].x     = (847.0f - 64.0f);
-    ghost[3].y     = (511.0f - 64.0f);
-    ghost[3].dx    = -1.5f;
-    ghost[3].dy    = -1.5f;
-    ghost[3].frame = 0;
-    ghost[3].color = 0x8fff8f80;
+    //ghost[1].x     = (847.0f - 64.0f);
+    //ghost[1].y     = 0.0f;
+    //ghost[1].dx    = -1.5f;
+    //ghost[1].dy    = 1.5f;
+    //ghost[1].frame = 0;
+    //ghost[1].color = 0x8f8fff80;
+//
+    //ghost[2].x     = 0.0f;
+    //ghost[2].y     = (511.0f - 64.0f);
+    //ghost[2].dx    = 1.5f;
+    //ghost[2].dy    = -1.5f;
+    //ghost[2].frame = 0;
+    //ghost[2].color = 0xff8f8f80;
+//
+    //ghost[3].x     = (847.0f - 64.0f);
+    //ghost[3].y     = (511.0f - 64.0f);
+    //ghost[3].dx    = -1.5f;
+    //ghost[3].dy    = -1.5f;
+    //ghost[3].frame = 0;
+    //ghost[3].color = 0x8fff8f80;
 	
 	// Ok, everything is setup. Now for the main loop.
 	while(1) {
