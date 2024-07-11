@@ -18,22 +18,14 @@
 
 #include <tiny3d.h>
 
-#include "ghost1_png_bin.h"
-#include "ghost2_png_bin.h"
-#include "ghost3_png_bin.h"
-#include "ghost4_png_bin.h"
-#include "ghost5_png_bin.h"
-#include "ghost6_png_bin.h"
-#include "ghost7_png_bin.h"
-#include "ghost8_png_bin.h"
-
+#include "dorian_png_bin.h"
 
 
 //__asm volatile("trap");
 
 
-pngData texture_ghost[8]; // PNG container of texture
-u32 texture_ghost_offset[8]; // offset for texture (used to pass the texture)
+pngData dorianTexture; // PNG container of texture
+u32 dorianTexture_offset; // offset for texture (used to pass the texture)
 
 // draw one background color in virtual 2D coordinates
 
@@ -72,6 +64,7 @@ void DrawSprites2D(float x, float y, float layer, float dx, float dy, u32 rgba)
     tiny3d_End();
 }
 
+/*
 void DrawSpritesRot2D(float x, float y, float layer, float dx, float dy, u32 rgba, float angle)
 {
     dx /= 2.0f; dy /= 2.0f;
@@ -105,92 +98,41 @@ void DrawSpritesRot2D(float x, float y, float layer, float dx, float dy, u32 rgb
     tiny3d_SetMatrixModelView(NULL); // set matrix identity
 
 }
+*/
 
-struct ghost{
+struct item{
 
     float x, y;
     float dx, dy;
     int frame;
     u32 color;
 
-} ghost;
+} item;
 
 void drawScene()
 {
 	int i = 0;
 
-    static int count_frames =0;
-
-    static float rotZ = 0.0f;
-
-    static int rotar =0;
-
-    if(!rotar && (rand() & 255)==1) rotar = 180;
-
-    rotZ += 0.1f;
+   
 
     tiny3d_Project2D(); // change to 2D context (remember you it works with 848 x 512 as virtual coordinates)
 
     // fix Perspective Projection Matrix
 
-    DrawBackground2D(0xff0000ff) ; // (r, g, b, a) 0xff0000ff ##!!! 
+    DrawBackground2D(0x9191a9ff) ; // (r, g, b, a) 0xff0000ff ##!!! 
 
-    count_frames++;
+       
+    // Load sprite texture
+    tiny3d_SetTexture(0, dorianTexture_offset, dorianTexture.width,
+        dorianTexture.height, dorianTexture.pitch,
+        TINY3D_TEX_FORMAT_A8R8G8B8, TEXTURE_LINEAR);
 
-    //for(i = 0; i < 1; i++) { // ##!!
+         
+        // draw sprite
+    DrawSprites2D(item.x, item.y, (float) i, 473, 500, item.color);
         
-        int cur_text = ghost.frame; // get current texture index for frame
+    
 
-        // Load sprite texture
-        tiny3d_SetTexture(0, texture_ghost_offset[cur_text], texture_ghost[cur_text].width,
-            texture_ghost[cur_text].height, texture_ghost[cur_text].pitch,  
-            TINY3D_TEX_FORMAT_A8R8G8B8, TEXTURE_LINEAR);
-
-        if(!rotar) {
-            
-            // draw sprite
-            DrawSprites2D(ghost.x, ghost.y, (float) i, 64, 64, ghost.color);
-        
-        }
-        else {
-
-            // draw with rotation
-            DrawSpritesRot2D(ghost.x, ghost.y, (float) i, 64, 64, ghost.color, rotZ);
-        }
-
-        // update frame
-        if(count_frames>8) {
-            
-            ghost.frame = ((ghost.frame + 1) & 3) | (ghost.frame & 4); 
-        }
-        
-        // update position
-        ghost.x += ghost.dx; 
-        ghost.y += ghost.dy;
-
-        // test the limits
-        if(ghost.x <= 0.0f || ghost.x >= (847.0f - 64.0f)) {
-            
-            ghost.x  = (ghost.x <= 0.0f) ? 0 : (847.0f - 64.0f);
-            ghost.dx = -ghost.dx;
-            
-        }
-
-        if(ghost.y <= 0.0f || ghost.y >= (511.0f - 64.0f)) {
-            
-            ghost.y  = (ghost.y <= 0.0f) ? 0 : (511.0f - 64.0f);
-            ghost.dy = -ghost.dy;
-        }
-
-        // change frames to left - right
-
-        if(ghost.dx >= 0.0f) ghost.frame |= 4; else ghost.frame &= ~4;
-        
-    //}
-
-    if(rotar) rotar--; else rotZ = 0.0f;
-
-    if(count_frames > 8) count_frames = 0;
 }
 
 void Load_PNG()
@@ -198,22 +140,14 @@ void Load_PNG()
 
     // load PNG from memory
 
-    pngLoadFromBuffer(ghost1_png_bin, ghost1_png_bin_size, &texture_ghost[0]);
-    pngLoadFromBuffer(ghost2_png_bin, ghost2_png_bin_size, &texture_ghost[1]);
-    pngLoadFromBuffer(ghost3_png_bin, ghost3_png_bin_size, &texture_ghost[2]);
-    pngLoadFromBuffer(ghost4_png_bin, ghost4_png_bin_size, &texture_ghost[3]);
-    pngLoadFromBuffer(ghost5_png_bin, ghost5_png_bin_size, &texture_ghost[4]);
-    pngLoadFromBuffer(ghost6_png_bin, ghost6_png_bin_size, &texture_ghost[5]);
-    pngLoadFromBuffer(ghost7_png_bin, ghost7_png_bin_size, &texture_ghost[6]);
-    pngLoadFromBuffer(ghost8_png_bin, ghost8_png_bin_size, &texture_ghost[7]);
+    pngLoadFromBuffer(dorian_png_bin, dorian_png_bin_size, &dorianTexture);
 
 }
 
 void LoadTexture()
 {
-    int i;
 
-    u32 * texture_mem = tiny3d_AllocTexture(64*1024*1024); // alloc 64MB of space for textures (this pointer can be global)
+    u32 * texture_mem = tiny3d_AllocTexture(64*1024*1024); // alloc 64MB ((64*1024*1024) 64 Mib??? )* of space for textures (this pointer can be global)
     
     u32 * texture_pointer; // use to asign texture space without changes texture_mem
 
@@ -226,21 +160,18 @@ void LoadTexture()
 
     // copy texture datas from PNG to the RSX memory allocated for textures
 
-    for(i = 0; i < 8; i++) {
+        dorianTexture_offset = 0;
        
-        texture_ghost_offset[i]   = 0;
-       
-        if(texture_ghost[i].bmp_out) {
+        if(dorianTexture.bmp_out) {
 
-            memcpy(texture_pointer, texture_ghost[i].bmp_out, texture_ghost[i].pitch * texture_ghost[i].height);
+            memcpy(texture_pointer, dorianTexture.bmp_out, dorianTexture.pitch * dorianTexture.height);
             
-            free(texture_ghost[i].bmp_out); // free the PNG because i don't need this datas
+            free(dorianTexture.bmp_out); // free the PNG because i don't need this datas
 
-            texture_ghost_offset[i] = tiny3d_TextureOffset(texture_pointer);      // get the offset (RSX use offset instead address)
+            dorianTexture_offset = tiny3d_TextureOffset(texture_pointer);      // get the offset (RSX use offset instead address)
 
-            texture_pointer += ((texture_ghost[i].pitch * texture_ghost[i].height + 15) & ~15) / 4; // aligned to 16 bytes (it is u32) and update the pointer
+            texture_pointer += ((dorianTexture.pitch * dorianTexture.height + 15) & ~15) / 4; // aligned to 16 bytes (it is u32) and update the pointer
          }
-    }
 }
 
 
@@ -271,33 +202,14 @@ s32 main()
 
     /* data for the ghost */
 
-    ghost.x     = 0.0f;
-    ghost.y     = 0.0f;
-    ghost.dx    = 1.5f;
-    ghost.dy    = 1.5f;
-    ghost.frame = 0;
-    ghost.color = 0x1fffffff;
+    item.x     = (1280 / 2) - 473 ;
+    item.y     = 0.0f;
+    item.dx    = 1.5f;
+    item.dy    = 1.5f;
+    item.frame = 0;
+    item.color = 0xffffffff;
 
-    //ghost[1].x     = (847.0f - 64.0f);
-    //ghost[1].y     = 0.0f;
-    //ghost[1].dx    = -1.5f;
-    //ghost[1].dy    = 1.5f;
-    //ghost[1].frame = 0;
-    //ghost[1].color = 0x8f8fff80;
-//
-    //ghost[2].x     = 0.0f;
-    //ghost[2].y     = (511.0f - 64.0f);
-    //ghost[2].dx    = 1.5f;
-    //ghost[2].dy    = -1.5f;
-    //ghost[2].frame = 0;
-    //ghost[2].color = 0xff8f8f80;
-//
-    //ghost[3].x     = (847.0f - 64.0f);
-    //ghost[3].y     = (511.0f - 64.0f);
-    //ghost[3].dx    = -1.5f;
-    //ghost[3].dy    = -1.5f;
-    //ghost[3].frame = 0;
-    //ghost[3].color = 0x8fff8f80;
+   
 	
 	// Ok, everything is setup. Now for the main loop.
 	while(1) {
